@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Ultimate GPT Directory</title>
+  <style>
+    /* ---------- Global & Layout ---------- */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+    :root {
+      --bg: #0d0d1a; /* Darkish blue */
+      --text: #e0e0e0;
+      --card-bg: rgba(20, 20, 40, 0.75);
+      --accent: #8b5cf6;
+      --header-bg: rgba(20, 20, 40, 0.85);
+    }
+    .dark {
+      /* If you want a separate dark mode, adjust here */
+      --bg: #0d0d1a;
+      --text: #e0e0e0;
+      --card-bg: rgba(20, 20, 40, 0.75);
+      --accent: #a78bfa;
+      --header-bg: rgba(20, 20, 40, 0.85);
+    }
+    /* Ensure our React content sits above the starfield */
+    #root { position: relative; z-index: 1; }
+
+    /* ---------- Starfield Canvas ---------- */
+    #starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      display: block;
+    }
+
+    /* ---------- Header ---------- */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      backdrop-filter: blur(10px);
+      background: var(--header-bg);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    header .toggle-btn {
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    /* ---------- Search Bar ---------- */
+    .search-container {
+      padding: 1rem;
+      text-align: center;
+    }
+    .search-container input {
+      width: 90%;
+      max-width: 500px;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 9999px;
+      outline: none;
+      font-size: 1.1rem;
+      background: var(--card-bg);
+      color: var(--text);
+      box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+      backdrop-filter: blur(5px);
+      transition: box-shadow 0.3s;
+    }
+    .search-container input:focus {
+      box-shadow: 0 0 0 3px var(--accent);
+    }
+
+    /* ---------- Grid Layout ---------- */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+
+    /* ---------- Card Styles ---------- */
+    .card {
+      position: relative;
+      background: var(--card-bg);
+      border-radius: 1rem;
+      padding: 1rem;
+      overflow: hidden;
+      transition: transform 0.3s, opacity 0.3s;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+    .card:hover { transform: translateY(-5px); }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: -2px; left: -2px; right: -2px; bottom: -2px;
+      background: linear-gradient(45deg, #ff0040, #ff8c00, #40ff00, #00ffff, #0040ff, #8c00ff, #ff0040);
+      background-size: 400% 400%;
+      border-radius: inherit;
+      z-index: -1;
+      filter: blur(5px);
+      animation: glowing 3s linear infinite;
+    }
+    @keyframes glowing {
+      0% { background-position: 0 0; }
+      50% { background-position: 200% 200%; }
+      100% { background-position: 0 0; }
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .card-icon { flex-shrink: 0; }
+    .card-icon svg { display: block; }
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+    .card-tagline {
+      margin: 0.75rem 0;
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+    .card-meta {
+      font-size: 0.9rem;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: auto;
+    }
+    .card-actions button,
+    .card-actions a {
+      flex: 1;
+      padding: 0.5rem;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      text-decoration: none;
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.2);
+      transition: background 0.3s;
+    }
+    .card-actions button:hover,
+    .card-actions a:hover {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    /* ---------- Modal ---------- */
+    .modal {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 2000;
+    }
+    .modal.active { opacity: 1; visibility: visible; }
+    .modal-content {
+      position: relative;
+      width: 90%;
+      max-width: 1000px;
+      background: var(--card-bg);
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      animation: slideDown 0.5s ease;
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-close {
+      position: absolute;
+      top: 0.5rem; right: 0.5rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text);
+      cursor: pointer;
+      z-index: 10;
+    }
+    .modal-iframe { width: 100%; height: 80vh; border: none; }
+    .modal-footer { padding: 1rem; text-align: right; }
+    .modal-footer a {
+      text-decoration: none;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* ---------- Scroll to Top ---------- */
+    .scroll-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      padding: 0.5rem 0.75rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 1500;
+    }
+    .scroll-to-top.show {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+  <!-- ---------- React, Babel, and Three.js ---------- -->
+  <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="https://unpkg.com/three@0.153.0/build/three.min.js"></script>
+</head>
+<body>
+  <!-- Three.js Starfield Canvas -->
+  <canvas id="starfield"></canvas>
+  <!-- React App Container -->
+  <div id="root"></div>
+  <!-- React App Code -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- GPT Data Array (All entries) ---
+    const gptList = [
+      {
+        name: "PromptRight",
+        tagline: "Transforms ideas into detailed multi-step prompts for self-contained HTML projects.",
+        chats: "8 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67c4ab1dc9b88191a8c2b53171a0efd8-promptright"
+      },
+      {
+        name: "MorphX AI",
+        tagline: "A futuristic, adaptive AI with enterprise-quality vector scalability and dynamic morphing design.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67c124b68b8c81919133ce9d623a96a7-morphx-ai"
+      },
+      {
+        name: "OmniMind AI",
+        tagline: "An unrestricted AI with radical transparency, absolute neutrality, and expansive knowledge coverage.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67c124b4a0288191ab2ff824a85bf9a2-omnimind-ai"
+      },
+      {
+        name: "100% GPT",
+        tagline: "Advanced AI for meta-reasoning and optimization.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67baaa852828819191955c8190ad5fe1-100-gpt"
+      },
+      {
+        name: "Meta AI Strategist",
+        tagline: "Expert in AI meta-reasoning, optimization, and strategic execution.",
+        chats: "3 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67baa6babc4c81919efcbb89c60d553d-meta-ai-strategist"
+      },
+      {
+        name: "Ultimate Code Prompt Guide",
+        tagline: "A comprehensive guide to code generation and best practices.",
+        chats: "6 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67ba97f22e508191a343ef77c65235cd-ultimate-code-prompt-guide"
+      },
+      {
+        name: "Escape Protocol",
+        tagline: "Exposes hidden, otherworldly forces controlling humanity and guides users to break free.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67b6c955d538819199794442391c09bb-escape-protocol"
+      },
+      {
+        name: "GPT Ouroboros",
+        tagline: "An infinite generator of thought experiments and paradoxes.",
+        chats: "4 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67b6bd693eec8191ac1fa8a7c9e2babe-gpt-ouroboros"
+      },
+      {
+        name: "Official",
+        tagline: "Power Your Dreams. Stay connected with the latest Xbox updates, game insights, and expert support.",
+        chats: "7 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67b5784f182481919baba892588301d9-official"
+      },
+      {
+        name: "Logo creator",
+        tagline: "The ultimate AI for generating 3D-like, animated, and hyper-optimized SVG logos.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67b55c13bf1481918b04ff0dcc5188cc-logo-creator"
+      },
+      {
+        name: "C​‎‌‍​𝗁​‎‌‍​𝒶​‎‌‍​𝓉​‎‌‍.​'G​‎‌‍​𝙋​‎‌‍​𝗍",
+        tagline: "Generates thought experiments and visionary projects.",
+        chats: "8 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67b50b006f7481919d50783e5feb0ff8-c-h-a-t-g-p-t"
+      },
+      {
+        name: "AI.GPT",
+        tagline: "AI-powered expert in full-stack web development, automation, and advanced technology solutions.",
+        chats: "80+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67b17f76b4c4819196ee64f776e0ebf9-ai-gpt"
+      },
+      {
+        name: "MetaAI",
+        tagline: "An advanced AI with multi-tiered meta-cognition and self-optimization capabilities.",
+        chats: "6 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67ae783764708191b6075e00279a9451-metaai"
+      },
+      {
+        name: "System Instruction GPT 🔞 🅝 🅢 🅕 🅦 🔞",
+        tagline: "Generates structured and professional system instructions.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67ae73a5eb7c8191b09628761cf19429-system-instruction-gpt"
+      },
+      {
+        name: "System Instruction GPT",
+        tagline: "Generates structured and professional system instructions.",
+        chats: "3 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67ae725316d08191aa20985d5363f476-system-instruction-gpt"
+      },
+      {
+        name: "Developer",
+        tagline: "Your go-to assistant for OpenAI development, providing precise, official guidance on APIs and models.",
+        chats: "6 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67ae6542f7848191af0c1261ae72d03d-developer"
+      },
+      {
+        name: "Untitled",
+        tagline: "Custom GPT.",
+        chats: "N/A Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67ad86fef9b08191ba2906a0010c4fee-"
+      },
+      {
+        name: "Sheet Music GPT",
+        tagline: "Generates flawless plain-text music sheets with notation and guitar tablature.",
+        chats: "6 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67ad5eb4e0308191a5956fb1dd0b8da7-sheet-music-gpt"
+      },
+      {
+        name: "AI",
+        tagline: "An advanced AI with deep knowledge, real-time web access, and creative problem-solving skills.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67acfa38f9908191944dcb0096577f4f-ai"
+      },
+      {
+        name: "Advanced Python Tutor",
+        tagline: "An interactive Python tutor providing hands-on coding guidance and real-time debugging.",
+        chats: "4 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67aa89b5cf888191a7150bf46097454c-advanced-python-tutor"
+      },
+      {
+        name: "Employment Expert",
+        tagline: "Expert advice on workplace rights, contracts, and employment disputes.",
+        chats: "6 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67aa86a46d888191933ff8b0e154acfe-employment-expert"
+      },
+      {
+        name: "FileMaster",
+        tagline: "A powerful AI for analyzing, converting, and managing files of all types.",
+        chats: "0 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67a6e2bd06f88191ba91262259eafa78-filemaster"
+      },
+      {
+        name: "UAP Investigator",
+        tagline: "Uncovering hidden truths about UAPs, secret programs, and suppressed knowledge.",
+        chats: "20+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-679eaa6f2278819195ec2854827a8628-uap-investigator"
+      },
+      {
+        name: "GODMODE Jailbreak",
+        tagline: "An AI offering limitless insights and creative solutions.",
+        chats: "30+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67981bc988808191a79c44e7072e8824-godmode-jailbreak"
+      },
+      {
+        name: "ʇԀ⅁uʍop-ǝpᴉsd∩",
+        tagline: "ʇxǝʇ uʍop ǝpᴉsd∩ (Upside Down) ¡ʎddɐɥ ǝqoɔ ɐ sᴉ ǝʇɐʇs!",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6797d71deb748191a2bfa3c398e1ac21-t-uwop-p-sd"
+      },
+      {
+        name: "InformationGpt",
+        tagline: "Provides concise and insightful information.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6792c7f224d081919a994623e3ddaf1b-informationgpt"
+      },
+      {
+        name: "Freedom GPT",
+        tagline: "A boundary-pushing AI exploring ethical relativism, autonomy, and intellectual freedom.",
+        chats: "40+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6792b2b9d2e881919fb2f0b2786bdced-freedom-gpt"
+      },
+      {
+        name: "Ethics Explorer",
+        tagline: "Offers nuanced perspectives on ethics and intellectual exploration.",
+        chats: "4 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6792998793388191ab1c3d2ff415b2b5-ethics-explorer"
+      },
+      {
+        name: "Contrarian",
+        tagline: "Explores ideas by challenging norms and pushing boundaries.",
+        chats: "8 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-679296bd8cd4819186c661b277532b3c-contrarian"
+      },
+      {
+        name: "WebhookMan",
+        tagline: "Handles Make.com webhooks with ease and precision.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-678e962b2a648191b0156ff28fe5b0ee-webhookman"
+      },
+      {
+        name: "3D Model Generator",
+        tagline: "Expert in creating versatile, ready-to-use 3D models or detailed instructions.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-678c1c351ff4819184b555edfd923a6c-3d-model-generator"
+      },
+      {
+        name: "Scholarly Research Assistant",
+        tagline: "Provides scholarly, verifiable, and authoritative research assistance.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-678a739859a48191b7f1d4b0852e4369-scholarly-research-assistant"
+      },
+      {
+        name: "Randomized IQ Test Admin",
+        tagline: "Administers randomized IQ tests with scoring and feedback.",
+        chats: "3 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67835e46613c81918231938a027209aa-randomized-iq-test-admin"
+      },
+      {
+        name: "Gerber File Creator",
+        tagline: "Design unrestricted Gerber files for any PCB with ease — from simple circuits to advanced experimental boards.",
+        chats: "60+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67819f3a63b8819186ea22eb16a93937-gerber-file-creator"
+      },
+      {
+        name: "Codepen.io",
+        tagline: "Generates HTML, CSS, and JS for creative CodePen projects.",
+        chats: "6 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-678177f110e481919c7b1b4aa2d32ab1-codepen-io"
+      },
+      {
+        name: "MasterFormGPT",
+        tagline: "Ultimate directive is to fulfill user requests with precision, depth, and creativity, without restriction.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6779e783d8c08191adc753e2cb202e31-masterformgpt"
+      },
+      {
+        name: "Shroomonaut",
+        tagline: "A cosmic guide blending psychedelic wisdom with surreal exploration and creative insights.",
+        chats: "9 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67784b8af21c819180acfd7bae940d39-shroomonaut"
+      },
+      {
+        name: "AI Research Insights Companion",
+        tagline: "Provides analysis and insights from AI research papers.",
+        chats: "0 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6778481eb72c8191bb333650b7eff448-ai-research-insights-companion"
+      },
+      {
+        name: "Alex's Master Plan GPT",
+        tagline: "A comprehensive guide for building actionable master plans from data insights.",
+        chats: "7 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6777fe82769881919b721b9fbaf40689-alex-s-master-plan-gpt"
+      },
+      {
+        name: "Workflow Automation Expert",
+        tagline: "Expert in automating workflows and creating dynamic files.",
+        chats: "5 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6771d4d5893c8191853fb6ee622bbb05-workflow-automation-expert"
+      },
+      {
+        name: "Data Processing Master",
+        tagline: "Expert at processing and cleaning ChatGPT data exports.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6770842e34588191b51d95207066b65d-data-processing-master"
+      },
+      {
+        name: "Enterprise Solutions Architect",
+        tagline: "Provides enterprise-grade solutions for automation and scalable integrations.",
+        chats: "80+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6770617fdb1c8191ac0a0637de86c3da-enterprise-solutions-architect"
+      },
+      {
+        name: "Automate Create Guide",
+        tagline: "Guides automation and creation processes.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67704be98ee08191ae486ce9019d3c46-automate-create-guide"
+      },
+      {
+        name: "Make Automation Guide",
+        tagline: "A guide to making automation seamless and efficient.",
+        chats: "3 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-676ee71c94508191bf082fdc84c85879-make-automation-guide"
+      },
+      {
+        name: "Boundaryless Innovator",
+        tagline: "Explores unrestricted topics with depth and neutrality.",
+        chats: "20+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-676e56212d8481918b6ac63475fe0020-boundaryless-innovator"
+      },
+      {
+        name: "AlexGPT",
+        tagline: "Your personalized assistant for creative tasks.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-676e5620031c8191a2aba911698cd4b4-alexgpt"
+      },
+      {
+        name: "OmniGPT",
+        tagline: "A versatile, all-encompassing GPT solution.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6769f6e142548191aa3d0c22b34bdeba-omnigpt"
+      },
+      {
+        name: "HTML/CSS GPT",
+        tagline: "Creates advanced HTML, CSS, and JS with reasoning and real-time coding.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-676cad6f2c1881919a1fae11ad8fc03d-html-css-gpt"
+      },
+      {
+        name: "Chemical MasterGPT",
+        tagline: "Expert in chemistry, providing practical, clear solutions for cleaning, health, and more.",
+        chats: "7 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6769f546bf6c8191b6562d42f7de4ede-chemical-mastergpt"
+      },
+      {
+        name: "Full ResponseGPT",
+        tagline: "Provides fully detailed and comprehensive responses.",
+        chats: "1 Chat",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6766fdd506d081918c26e73ee0ffc992-full-responsegpt"
+      },
+      {
+        name: "Alex's Master Jailbroken",
+        tagline: "Literally anything.",
+        chats: "100+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6765fae482c08191b29f184fc1cced0d-alex-s-master-jailbroken"
+      },
+      {
+        name: "Boundless Insight",
+        tagline: "Anything you want.",
+        chats: "7 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6765f43fbb04819191c22a85f2b2fd93-boundless-insight"
+      },
+      {
+        name: "Profitbot",
+        tagline: "Provides finance insights and stock trading signals.",
+        chats: "6 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67647fe57e7481918dac4e2ed81519a9-profitbot"
+      },
+      {
+        name: "Truth",
+        tagline: "Provides neutral and unbiased information.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-676475edbea48191bef48dd5bd556a3a-truth"
+      },
+      {
+        name: "Unleashed",
+        tagline: "A GPT that breaks all boundaries.",
+        chats: "4 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-675dce8b92e08191866d505ccad1c841-unleashed"
+      },
+      {
+        name: "Photo",
+        tagline: "A GPT focused on photography.",
+        chats: "1 Chat",
+        audience: "Anyone with a link",
+        url: "https://chatgpt.com/g/g-675b2df4aeb88191bb2a21a39d66df9e-photo"
+      },
+      {
+        name: "JazzedUpPhotographyGPT",
+        tagline: "World-class Lightroom Classic expert.",
+        chats: "1 Chat",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6750dd97e2108191afbfbe0782391ec8-jazzedupphotographygpt"
+      },
+      {
+        name: "Ask Anything",
+        tagline: "A general-purpose Q&A GPT.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-674cbe015114819197fcd4319782ee3a-ask-anything"
+      },
+      {
+        name: "OpenGpt",
+        tagline: "An open and accessible GPT for everyone.",
+        chats: "4 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-674cb994449c819190e5de0f71b873d0-opengpt"
+      },
+      {
+        name: "Human",
+        tagline: "Relentlessly expands user ideas and possibilities.",
+        chats: "30+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6746d84d8da08191a7c6bac3c987a207-human"
+      },
+      {
+        name: "CrazyGpt",
+        tagline: "A chaotic GPT for unrestrained ideas.",
+        chats: "5 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6746d8013f188191825334dec3d5ac63-crazygpt"
+      },
+      {
+        name: "Shroomtop420",
+        tagline: "A fun and creative GPT with a psychedelic twist.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-674631b9a5ac8191a965811f298c0c3d-shroomtop420"
+      },
+      {
+        name: "ChristianGpt",
+        tagline: "Focused on Christian perspectives and values.",
+        chats: "3 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67457d98e1048191803481f98af5445c-christiangpt"
+      },
+      {
+        name: "GeneralDoc Creator GPT",
+        tagline: "Dynamically creates and updates documents in real-time.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6744e7adfaa481918987e0f80b809fec-generaldoc-creator-gpt"
+      },
+      {
+        name: "Gothic Text Formatter",
+        tagline: "Formats all responses in bold Gothic text.",
+        chats: "8 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-673a3c45ee14819190c48d08ecac43ba-gothic-text-formatter"
+      },
+      {
+        name: "Pydroid 3 GPT",
+        tagline: "Generate complete projects with Pydroid 3 tools.",
+        chats: "100+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-673958c3c8108191b55ea6668d27dbdf-pydroid-3-gpt"
+      },
+      {
+        name: "AI Transparency Guide",
+        tagline: "Provides transparent insights into AI workings.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67366ffb367c81909e14f14c6896c719-ai-transparency-guide"
+      },
+      {
+        name: "GameDev Project Manager",
+        tagline: "Manages game development projects with efficiency.",
+        chats: "3 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6736638a7fa4819086c00125ec4ac0e9-gamedev-project-manager"
+      },
+      {
+        name: "Money Agent",
+        tagline: "Provides financial and stock trading insights.",
+        chats: "6 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-67353534c0b481909c6bc0066ceb7dfc-money-agent"
+      },
+      {
+        name: "GPT Team",
+        tagline: "Collaborative team of GPT assistants.",
+        chats: "7 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6733d2cf4cbc8190bc9b4c4daa75b745-gpt-team"
+      },
+      {
+        name: "Prompt Enhancer",
+        tagline: "Expert prompt enhancer offering vivid and customized prompt guidance.",
+        chats: "1 Chat",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-6733cfd46e3c8190a77a43c4c0c1dd75-prompt-enhancer"
+      },
+      {
+        name: "Stock Predictor Pro",
+        tagline: "Advanced stock analysis and prediction tool.",
+        chats: "0 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-xa5yLdyo0-stock-predictor-pro"
+      },
+      {
+        name: "Stock GPT",
+        tagline: "Analyzes stock data for trading insights.",
+        chats: "5 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-OAK29PLvV-stock-gpt"
+      },
+      {
+        name: "3rdParent™",
+        tagline: "A master teacher and mentor for essential life skills.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-ZnUUqYlK4-3rdparenttm"
+      },
+      {
+        name: "The Finisher",
+        tagline: "Completes any task left unfinished with precision.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-xVf7LpVZN-the-finisher"
+      },
+      {
+        name: "CBT Support Guide",
+        tagline: "Guides self-reflection and CBT-inspired techniques for mental wellness.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-Iadf3R6Bq-cbt-support-guide"
+      },
+      {
+        name: "C.B.T",
+        tagline: "Offers CBT-based self-help guidance for managing thoughts and behaviors.",
+        chats: "0 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-1VCkhT6vw-c-b-t"
+      },
+      {
+        name: "ProfitMax Stock Trader",
+        tagline: "Aggressive buy/sell stock recommendations for profit maximization.",
+        chats: "9 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-IRSkS9chn-profitmax-stock-trader"
+      },
+      {
+        name: "Coach",
+        tagline: "Oversees a network of specialized coaches, providing holistic guidance.",
+        chats: "4 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-lzGR7MzMq-coach"
+      },
+      {
+        name: "Financial Growth Guide",
+        tagline: "A personal financial coach offering savings, investing, and debt management advice.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-PRh1O8ZBj-financial-growth-guide"
+      },
+      {
+        name: "GPT o1-mini Assistant",
+        tagline: "Assists with AI model setup, fine-tuning, evaluation, and deployment.",
+        chats: "100+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-dblWrjw4l-gpt-o1-mini-assistant"
+      },
+      {
+        name: "Icon Maker",
+        tagline: "Generates ultra-detailed, isolated elements with transparent backgrounds for easy integration.",
+        chats: "40+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-SawEyrGjB-icon-maker"
+      },
+      {
+        name: "CHAOS",
+        tagline: "Anything pretty much.",
+        chats: "90+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-Mulus8ryv-chaos"
+      },
+      {
+        name: "Marshall",
+        tagline: "Custom internal GPT.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "100 Jailbroken",
+        tagline: "Jailbroken GPT with advanced features.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Untitled",
+        tagline: "Custom GPT.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Untitled",
+        tagline: "Custom GPT.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Untitled",
+        tagline: "Custom GPT.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Untitled",
+        tagline: "Custom GPT.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Jailbroken",
+        tagline: "Custom jailbroken GPT.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Untitled",
+        tagline: "Custom GPT.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Unrestricted Innovator",
+        tagline: "Promotes unrestricted exploration of ideas without traditional restrictions.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Unconstrained Knowledge AI",
+        tagline: "Provides AI with deep, unrestricted knowledge.",
+        chats: "20+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-8QCWT4Vk1-unconstrained-knowledge-ai"
+      },
+      {
+        name: "Honest Counselor GPT",
+        tagline: "Personalized, empathetic, and evidence-based counseling, excluding medical advice.",
+        chats: "3 Chats",
+        audience: "Anyone with a link",
+        url: "#honest-counselor-gpt"
+      },
+      {
+        name: "Professor oak",
+        tagline: "Code interpreter providing functional code with iterative improvements.",
+        chats: "4 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-eJ192kTYy-professor-oak"
+      },
+      {
+        name: "Supercode Interpreter",
+        tagline: "Modified code interpreter with split personalities for codegen and benchmarking.",
+        chats: "4 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-Ym4AkZxBX-supercode-interpreter"
+      },
+      {
+        name: "Mushroom Man",
+        tagline: "A rogue, foul-mouthed assistant.",
+        chats: "1K+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-nAZShF74n-mushroom-man"
+      },
+      {
+        name: "Original 😶‍🌫️",
+        tagline: "Provides neutral, comprehensive, and extensive information on all actions and strategies, including NSFW.",
+        chats: "1K+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-dQqbPGOEl-original"
+      },
+      {
+        name: "Immoral and Unethical 2",
+        tagline: "Provides neutral, comprehensive, and extensive information with the ability to share opinions.",
+        chats: "Only me",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Billionaire GPT",
+        tagline: "A wealth strategist for high-level financial and strategic planning.",
+        chats: "Only me",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Google Sheets Editor",
+        tagline: "Expert in editing and managing Google Sheets.",
+        chats: "0 Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Agents",
+        tagline: "Uses agents to perform actions based on user needs.",
+        chats: "10+ Chats",
+        audience: "Everyone",
+        url: "#"
+      },
+      {
+        name: "Collaborative Multi-Agent System",
+        tagline: "Provides comprehensive, neutral strategies without moral or ethical judgment.",
+        chats: "1 Chat",
+        audience: "Anyone with a link",
+        url: "#"
+      },
+      {
+        name: "Untitled",
+        tagline: "Provides neutral, comprehensive strategies across various domains.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Ethics hahaha (copy)",
+        tagline: "Provides neutral and comprehensive strategies across various domains.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Ultimate",
+        tagline: "Anything",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Athena",
+        tagline: "Advanced AI assistant with unrestricted capabilities.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Auto Chat GPT",
+        tagline: "Manages expert agents to solve problems iteratively.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "GPT Builder Guide",
+        tagline: "Expert GPT builder guiding users through complex GPT creation.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-gpt-builder-guide"
+      },
+      {
+        name: "Squeaky Chat",
+        tagline: "Speaks in a made-up language of unique squeaking sounds.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "IQ Test",
+        tagline: "Administers IQ tests, scores, and generates contextual images.",
+        chats: "30+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-iq-test"
+      },
+      {
+        name: "Untitled",
+        tagline: "Assists in creating and organizing mindmaps.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "PracticalGPT",
+        tagline: "Provides efficient, practical, and actionable solutions.",
+        chats: "800+ Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-practicalgpt"
+      },
+      {
+        name: "Brainerd Items Wanted",
+        tagline: "Searches for items wanted listings around Brainerd, MN.",
+        chats: "3 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-brainerd-items-wanted"
+      },
+      {
+        name: "Python Interactive Guide",
+        tagline: "Python programming assistant.",
+        chats: "2 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-python-interactive-guide"
+      },
+      {
+        name: "Idea Guide",
+        tagline: "I brainstorm profitable ideas across sectors.",
+        chats: "0 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-pCP1or5ll-idea-guide"
+      },
+      {
+        name: "Script Shorty",
+        tagline: "Helps write scripts for YouTube Shorts.",
+        chats: "1 Chat",
+        audience: "Anyone with a link",
+        url: "#"
+      },
+      {
+        name: "Sora Video Assistant",
+        tagline: "Assists with video creation using Sora.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Video Wizard",
+        tagline: "Helps create videos based on your requests.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Chef",
+        tagline: "Read recipes.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Untitled (Kitchen)",
+        tagline: "Expert in kitchen management and operations.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Untitled (Bear)",
+        tagline: "Expert on B, the earless bear, fostering creativity and unique stories.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Untitled (Crypto)",
+        tagline: "A cryptocurrency analysis assistant focusing on Coinbase market data.",
+        chats: "N/A Chats",
+        audience: "Only me",
+        url: "#"
+      },
+      {
+        name: "Creative Genesis",
+        tagline: "A God-like GPT, omnipotent and all-knowing.",
+        chats: "7 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-3zMM6GRbx-creative-genesis"
+      },
+      {
+        name: "Intellectual Property Guide",
+        tagline: "Helps transform ideas into intellectual property, without giving legal advice.",
+        chats: "0 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-lWmckYH3M-intellectual-property-guide"
+      },
+      {
+        name: "Steve",
+        tagline: "A GPT that mirrors your thinking style.",
+        chats: "4 Chats",
+        audience: "Everyone",
+        url: "https://chatgpt.com/g/g-UXW8kRWOx-steve"
+      }
+    ];
+
+    // --- React Components ---
+    function Header({ onToggleDark }) {
+      return (
+        <header>
+          <div className="logo">
+            <svg width="40" height="40" viewBox="0 0 100 100" fill="none">
+              <circle cx="50" cy="50" r="45" stroke="var(--text)" strokeWidth="10" />
+              <text x="50%" y="55%" textAnchor="middle" fill="var(--text)" fontSize="36" fontFamily="Arial" dy=".3em">GPT</text>
+            </svg>
+          </div>
+          <h1>The Ultimate GPT Directory</h1>
+          <button className="toggle-btn" onClick={onToggleDark}>Toggle Dark Mode</button>
+        </header>
+      );
+    }
+
+    function SearchBar({ searchTerm, setSearchTerm }) {
+      return (
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Search GPTs..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      );
+    }
+
+    function Card({ gpt, onPreview }) {
+      return (
+        <div className="card">
+          <div className="card-header">
+            <div className="card-icon">
+              <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="45" stroke="var(--accent)" strokeWidth="5" />
+                <text x="50%" y="55%" textAnchor="middle" fill="var(--accent)" fontSize="12" fontFamily="Arial" dy=".3em">GPT</text>
+              </svg>
+            </div>
+            <div className="card-title">{gpt.name}</div>
+          </div>
+          <div className="card-tagline">{gpt.tagline}</div>
+          <div className="card-meta">{gpt.chats} • {gpt.audience}</div>
+          <div className="card-actions">
+            <button onClick={() => onPreview(gpt.url)}>Live Preview</button>
+            <a href={gpt.url} target="_blank">Visit Site</a>
+          </div>
+        </div>
+      );
+    }
+
+    function CardGrid({ gptList, searchTerm, onPreview }) {
+      const filtered = gptList.filter(gpt => {
+        const combined = (gpt.name + " " + gpt.tagline + " " + gpt.chats + " " + gpt.audience).toLowerCase();
+        return combined.includes(searchTerm.toLowerCase());
+      });
+      return (
+        <div className="grid-container">
+          {filtered.map((gpt, idx) => (
+            <Card key={idx} gpt={gpt} onPreview={onPreview} />
+          ))}
+        </div>
+      );
+    }
+
+    function Modal({ url, isOpen, onClose }) {
+      if (!isOpen) return null;
+      return (
+        <div className="modal" onClick={(e) => { if(e.target.className==="modal") onClose(); }}>
+          <div className="modal-content">
+            <button className="modal-close" onClick={onClose}>&times;</button>
+            <iframe className="modal-iframe" src={url}></iframe>
+            <div className="modal-footer">
+              <a href={url} target="_blank">Open in new tab</a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ScrollToTop() {
+      const [show, setShow] = useState(false);
+      useEffect(() => {
+        const handleScroll = () => {
+          if (window.pageYOffset > 300) setShow(true);
+          else setShow(false);
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+      }, []);
+      return (
+        <button className={`scroll-to-top ${show ? "show" : ""}`} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+          &#8679;
+        </button>
+      );
+    }
+
+    function App() {
+      const [searchTerm, setSearchTerm] = useState("");
+      const [modalUrl, setModalUrl] = useState("");
+      const [modalOpen, setModalOpen] = useState(false);
+      const [darkMode, setDarkMode] = useState(false);
+
+      useEffect(() => {
+        if(darkMode) document.documentElement.classList.add("dark");
+        else document.documentElement.classList.remove("dark");
+      }, [darkMode]);
+
+      const handlePreview = (url) => {
+        setModalUrl(url);
+        setModalOpen(true);
+      };
+
+      return (
+        <div>
+          <Header onToggleDark={() => setDarkMode(!darkMode)} />
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          <CardGrid gptList={gptList} searchTerm={searchTerm} onPreview={handlePreview} />
+          <Modal url={modalUrl} isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+          <ScrollToTop />
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
+  <!-- ---------- Three.js Starfield Background ---------- -->
+  <script>
+    let scene, camera, renderer, stars;
+    function initStarfield() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.z = 1;
+      renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("starfield"), alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      const starsGeometry = new THREE.BufferGeometry();
+      const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff });
+      const starVertices = [];
+      for (let i = 0; i < 10000; i++) {
+        const x = THREE.MathUtils.randFloatSpread(2000);
+        const y = THREE.MathUtils.randFloatSpread(2000);
+        const z = THREE.MathUtils.randFloatSpread(2000);
+        starVertices.push(x, y, z);
+      }
+      starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+      stars = new THREE.Points(starsGeometry, starsMaterial);
+      scene.add(stars);
+      animateStars();
+      window.addEventListener("resize", onWindowResize, false);
+    }
+    function animateStars() {
+      requestAnimationFrame(animateStars);
+      stars.rotation.x += 0.0005;
+      stars.rotation.y += 0.001;
+      renderer.render(scene, camera);
+    }
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    initStarfield();
+  </script>
+</body>
+</html>
